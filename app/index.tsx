@@ -1,5 +1,13 @@
+import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 interface pokemonFetch {
   name: string;
@@ -38,7 +46,7 @@ const colorByType = {
   dark: "#705848",
   steel: "#b8b8d0",
   fairy: "#ee99ac",
-};
+} as const;
 
 const iconByType = {
   normal: "⚪",
@@ -77,6 +85,21 @@ function lightenHexColor(hex: string, amount: number) {
   return `#${rr}${gg}${bb}`;
 }
 
+function hexToRgba(hex: string, alpha: number) {
+  const safeHex = hex.replace("#", "");
+  const r = parseInt(safeHex.substring(0, 2), 16);
+  const g = parseInt(safeHex.substring(2, 4), 16);
+  const b = parseInt(safeHex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function getTypeColor(typeName?: string) {
+  if (!typeName) {
+    return "#94a3b8";
+  }
+  return colorByType[typeName as keyof typeof colorByType] ?? "#94a3b8";
+}
+
 export default function Index() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   useEffect(() => {
@@ -109,76 +132,100 @@ export default function Index() {
     }
   }
   return (
-    <ScrollView
-      contentContainerStyle={{
-        gap: 16,
-        padding: 16,
-      }}
-    >
-      {pokemons.map((pokemon: Pokemon) => (
-        <View
-          key={pokemon.name}
-          style={{
-            // @ts-ignore
-            backgroundColor: colorByType[pokemon.types[0].type.name] + 30,
-            padding: 20,
-          }}
-        >
-          <Text style={styles.name}>
-            {pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              flexWrap: "wrap",
-              gap: 10,
-              borderRadius: 20,
-            }}
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      {pokemons.map((pokemon: Pokemon) => {
+        const mainType = getTypeColor(pokemon.types[0]?.type.name);
+
+        return (
+          <Link
+            asChild
+            key={pokemon.name}
+            href={{ pathname: "./details", params: { name: pokemon.name } }}
           >
-            {pokemon.types.map((type: PokemonType) => (
-              <View
-                key={type.type.name}
-                style={{
-                  backgroundColor: lightenHexColor(
-                    // @ts-ignore
-                    colorByType[type.type.name],
-                    0.15,
-                  ),
-                  padding: 10,
-                  borderRadius: 80,
-                }}
-              >
-                <View style={styles.typeBadgeContent}>
-                  <Text style={styles.typeIcon}>
-                    {
-                      // @ts-ignore
-                      iconByType[type.type.name]
-                    }
-                  </Text>
-                  <Text style={styles.type}>{type.type.name}</Text>
-                </View>
+            <Pressable
+              style={[
+                styles.card,
+                {
+                  backgroundColor: lightenHexColor(mainType, 0.45),
+                  borderColor: hexToRgba(mainType, 0.75),
+                },
+              ]}
+            >
+              <Text style={styles.name}>
+                {pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}
+              </Text>
+              <View style={styles.typeRow}>
+                {pokemon.types.map((type: PokemonType) => (
+                  <View
+                    key={type.type.name}
+                    style={[
+                      styles.typeBadge,
+                      {
+                        backgroundColor: lightenHexColor(
+                          getTypeColor(type.type.name),
+                          0.15,
+                        ),
+                      },
+                    ]}
+                  >
+                    <View style={styles.typeBadgeContent}>
+                      <Text style={styles.typeIcon}>
+                        {iconByType[type.type.name as keyof typeof iconByType]}
+                      </Text>
+                      <Text style={styles.type}>{type.type.name}</Text>
+                    </View>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-          <View style={{ alignItems: "center", justifyContent: "center" }}>
-            <Image
-              source={{ uri: pokemon.image }}
-              style={{ width: 150, height: 150 }}
-            />
-          </View>
-        </View>
-      ))}
+              <View style={styles.imageWrap}>
+                <Image source={{ uri: pokemon.image }} style={styles.image} />
+              </View>
+            </Pressable>
+          </Link>
+        );
+      })}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: "#f1f5f9",
+  },
+  content: {
+    gap: 16,
+    padding: 16,
+    paddingBottom: 24,
+  },
+  card: {
+    borderRadius: 22,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.8)",
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 3,
+  },
   name: {
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 12,
+  },
+  typeRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 10,
+    borderRadius: 20,
+    marginBottom: 8,
+  },
+  typeBadge: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 80,
   },
   type: {
     fontSize: 13,
@@ -198,5 +245,13 @@ const styles = StyleSheet.create({
   },
   typeIcon: {
     fontSize: 16,
+  },
+  imageWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  image: {
+    width: 150,
+    height: 150,
   },
 });
