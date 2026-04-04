@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "react-native-demo",
-    "slug": "react-native-demo",
+    "name": "pokedex",
+    "slug": "pokedex",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "reactnativedemo",
+    "scheme": "pokedex",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
